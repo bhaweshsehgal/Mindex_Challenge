@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -31,32 +33,36 @@ public class ReportingStructureServiceImpl implements ReportingStructureService 
 		int numberOfAllReportees=0;
 		Employee emp = employeeRepository.findByEmployeeId(employeeId);
 		
-		List<List<Employee>> emplheirarchy = new ArrayList<List<Employee>>();
-		emplheirarchy = calculateHeirarchy(employeeId, emp, emplheirarchy,numberOfAllReportees);
-		for(List<Employee> e:emplheirarchy) {
-			numberOfAllReportees+=e.size();
+		List<Employee> emplheirarchy = new ArrayList<Employee>();
+		Set<String> id=new HashSet<String>();
+		id = calculateHeirarchy(employeeId, emp,id);
+		for(String s:id) {
+			emplheirarchy.add(employeeRepository.findByEmployeeId(s));
 		}
+		numberOfAllReportees=id.size();
 		reportingstructure.setEmp(emplheirarchy);
 		reportingstructure.setNumberOfReportees(numberOfAllReportees);
 		return reportingstructure;
 	}
-
-	private List<List<Employee>> calculateHeirarchy(String employeeId,Employee emp,List<List<Employee>> emplheirarchy,
-			int numberOfAllReportees) {
+// the below function will use backtracking concepts to return all the reporting structure ID which belongs to particular employee and using those id 
+// we are going to find out size of reporting structure and the those employees structure.
+	private Set<String> calculateHeirarchy(String employeeId,Employee emp,
+			Set<String> id) {
 		// TODO Auto-generated method stub
 		if(emp.getDirectReports()==null) {
-			return emplheirarchy;
+			return id;
 		}
 		else {
-			List<Employee> s=emp.getDirectReports();
-			System.out.print("hey");
-			numberOfAllReportees+=s.size();
-			emplheirarchy.add(s);
+			List<Employee> s=new ArrayList<Employee>();
+			for(Employee e:emp.getDirectReports()) {
+				id.add(e.getEmployeeId());
+				s.add(employeeRepository.findByEmployeeId(e.getEmployeeId()));
+			}
 			for(Employee emp1:s) {
-				calculateHeirarchy(emp1.getEmployeeId(),employeeRepository.findByEmployeeId(emp1.getEmployeeId()),emplheirarchy,numberOfAllReportees);
+				id= calculateHeirarchy(emp1.getEmployeeId(),employeeRepository.findByEmployeeId(emp1.getEmployeeId()),id);
 			}
 		}
-		return emplheirarchy;
+		return id;
 	}
 
 }

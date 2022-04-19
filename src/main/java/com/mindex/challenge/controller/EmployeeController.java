@@ -1,3 +1,4 @@
+
 package com.mindex.challenge.controller;
 
 import com.mindex.challenge.data.Compensation;
